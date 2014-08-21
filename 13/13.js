@@ -7,12 +7,23 @@ var url = require('url');
     var server = http.createServer(function(request, response) {
         // Request handling logic
         var parsed = url.parse(request.url, true);
-        if (parsed.pathName === '/api/parsetime') {
-        
-        } else if (parsed.pathName === '/api/unixtime') {
-        
+        if (/^\/api\/parsetime/.test(request.url) ||  /^\/api\/unixtime/.test(request.url))  {
+            var date = new Date(parsed.query.iso);
+            var time = {};
+            if (/^\/api\/parsetime/.test(request.url)) {
+                time.hour = date.getHours();
+                time.minute = date.getMinutes();
+                time.second = date.getSeconds();
+            } else {
+                // /api/unixtime
+                time.unixtime = date.getTime();
+            }
+            headerJSON(response);
+            response.end(JSON.stringify(time));
+
         } else {
             // Bad filepath
+            response.writeHead(404);
             return response.end("BAD API PATH");
         }
 
@@ -20,7 +31,8 @@ var url = require('url');
     server.listen(port);
 
     function headerJSON(response) {
-        response.writeHead(502);
+        response.writeHead(200, { 'Content-Type': 'application/json'});
     }
+
 })();
 
